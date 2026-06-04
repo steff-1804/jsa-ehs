@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSA - Análisis de Peligros Laborales</title>
+
+```
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+```
+
+</head>
+
+<body>
+
+<div class="container">
+
+```
+<h1>JSA - Análisis de Peligros Laborales</h1>
+
+<div class="card">
+
+    <label>Área</label>
+    <input type="text" id="area" placeholder="Ingrese el área">
+
+    <label>Actividad</label>
+    <input type="text" id="actividad" placeholder="Ingrese la actividad">
+
+</div>
+
+<div class="card">
+
+    <h2>Fotografía de la actividad</h2>
+
+    <p>
+        Puede subir una foto desde computadora o tomar una foto desde celular.
+    </p>
+
+    <div class="foto-box">
+
+        <div>
+            <button type="button">Subir foto</button><br>
+            <input type="file"
+                   id="foto_upload"
+                   accept="image/*">
+        </div>
+
+        <div>
+            <button type="button">Tomar foto</button><br>
+            <input type="file"
+                   id="foto_camera"
+                   accept="image/*"
+                   capture="environment">
+        </div>
+
+    </div>
+
+    <img id="preview_foto"
+         style="display:none;max-width:300px;margin-top:15px;">
+
+</div>
+
+<div class="card">
+
+    <h2>Agregar peligro a la actividad</h2>
+
+    <label>Peligro</label>
+
+    <div class="row">
+
+        <select id="hazard_select" onchange="copiarHazard()">
+
+            <option value="">Seleccione un peligro</option>
+
+            <option value="Golpes">Golpes</option>
+            <option value="Caídas">Caídas</option>
+            <option value="Atrapamiento">Atrapamiento</option>
+            <option value="Proyección de partículas">Proyección de partículas</option>
+            <option value="Ruido">Ruido</option>
+            <option value="Químicos">Químicos</option>
+            <option value="Ergonómico">Ergonómico</option>
+            <option value="Eléctrico">Eléctrico</option>
+
+            <option value="Otro">Otro</option>
+
+        </select>
+
+        <input type="text"
+               id="peligro"
+               placeholder="Escriba o seleccione el peligro">
+
+    </div>
+
+    <label>Consecuencia</label>
+
+    <textarea id="consecuencia"
+              rows="3"
+              placeholder="Ej: golpes, lesiones, fracturas, quemaduras"></textarea>
+
+    <label>Tipo de riesgo</label>
+
+    <select id="tipo_riesgo">
+        <option value="Físico">Físico</option>
+        <option value="Químico">Químico</option>
+        <option value="Biológico">Biológico</option>
+        <option value="Ergonómico">Ergonómico</option>
+        <option value="Psicosocial">Psicosocial</option>
+        <option value="Mecánico">Mecánico</option>
+        <option value="Eléctrico">Eléctrico</option>
+    </select>
+
+    <label>SEV</label>
+
+    <select id="sev">
+        <option value="1">1 - Menor</option>
+        <option value="2">2 - Bajo</option>
+        <option value="3">3 - Moderado</option>
+        <option value="4">4 - Grave</option>
+        <option value="5">5 - Catastrófico</option>
+    </select>
+
+    <label>LIKL</label>
+
+    <select id="likl">
+        <option value="1">1 - Raro</option>
+        <option value="2">2 - Poco probable</option>
+        <option value="3">3 - Posible</option>
+        <option value="4">4 - Probable</option>
+        <option value="5">5 - Frecuente</option>
+    </select>
+
+    <label>CONT</label>
+
+    <select id="cont">
+        <option value="1">1 - Efectivo</option>
+        <option value="2">2 - Bueno</option>
+        <option value="3">3 - Parcial</option>
+        <option value="4">4 - Deficiente</option>
+        <option value="5">5 - Sin control</option>
+    </select>
+
+    <label>Existing Controls</label>
+    <textarea id="existing_controls"></textarea>
+
+    <label>Recommended Controls</label>
+    <textarea id="recommended_controls"></textarea>
+
+    <label>SEV Post</label>
+
+    <select id="sev_post">
+        <option value="1">1 - Menor</option>
+        <option value="2">2 - Bajo</option>
+        <option value="3">3 - Moderado</option>
+        <option value="4">4 - Grave</option>
+        <option value="5">5 - Catastrófico</option>
+    </select>
+
+    <label>LIKL Post</label>
+
+    <select id="likl_post">
+        <option value="1">1 - Raro</option>
+        <option value="2">2 - Poco probable</option>
+        <option value="3">3 - Posible</option>
+        <option value="4">4 - Probable</option>
+        <option value="5">5 - Frecuente</option>
+    </select>
+
+    <label>CONT Post</label>
+
+    <select id="cont_post">
+        <option value="1">1 - Efectivo</option>
+        <option value="2">2 - Bueno</option>
+        <option value="3">3 - Parcial</option>
+        <option value="4">4 - Deficiente</option>
+        <option value="5">5 - Sin control</option>
+    </select>
+
+    <br><br>
+
+    <button type="button" onclick="agregarPeligroAActividad()">
+        + Agregar peligro
+    </button>
+
+    <button type="button" onclick="guardarActividadConPeligros()">
+        Guardar actividad
+    </button>
+
+</div>
+
+<div class="card">
+
+    <h2>Peligros agregados a esta actividad</h2>
+
+    <table id="tabla_peligros_temp">
+
+        <thead>
+            <tr>
+                <th>Peligro</th>
+                <th>Consecuencia</th>
+                <th>Tipo</th>
+                <th>SEV</th>
+                <th>LIKL</th>
+                <th>CONT</th>
+                <th>RPN</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+
+        <tbody></tbody>
+
+    </table>
+
+</div>
+
+<div class="card">
+
+    <h2>Matriz generada</h2>
+
+    <table id="tabla">
+
+        <thead>
+
+            <tr>
+                <th>Área</th>
+                <th>Foto</th>
+                <th>Actividad</th>
+                <th>Peligro</th>
+                <th>Consecuencia</th>
+                <th>Tipo</th>
+                <th>SEV</th>
+                <th>LIKL</th>
+                <th>Existing Controls</th>
+                <th>CONT</th>
+                <th>RPN</th>
+                <th>Recommended Controls</th>
+                <th>SEV P</th>
+                <th>LIKL P</th>
+                <th>CONT P</th>
+                <th>RPN P</th>
+                <th>Eliminar</th>
+            </tr>
+
+        </thead>
+
+        <tbody></tbody>
+
+    </table>
+
+    <br>
+
+    <button type="button" onclick="exportarExcel()">
+        Descargar Excel
+    </button>
+
+    <button type="button" onclick="limpiarTodo()">
+        Borrar todo
+    </button>
+
+</div>
+```
+
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+</html>
