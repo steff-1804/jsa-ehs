@@ -6,8 +6,9 @@
 
 body{
     font-family:"Segoe UI", Arial, sans-serif;
-    background:linear-gradient(135deg,#edf4fb,#f9fcff);
+    background:#eef3f8;
     color:#1f2937;
+    min-height:100vh;
 }
 
 .app{
@@ -19,42 +20,49 @@ body{
 .header-pro{
     background:linear-gradient(135deg,#003366,#0078d4);
     color:white;
-    padding:28px;
+    padding:24px 28px;
     border-radius:26px;
     margin-bottom:18px;
     display:flex;
     justify-content:space-between;
     align-items:center;
+    gap:20px;
     box-shadow:0 16px 35px rgba(0,51,102,.25);
+    overflow:hidden;
 }
 
 .brand{
     display:flex;
     align-items:center;
-    gap:18px;
+    gap:20px;
+    max-width:80%;
 }
 
-.logo-box{
-    width:74px;
-    height:74px;
-    border-radius:20px;
+.logo-box.image-logo{
+    width:170px;
+    height:70px;
     background:white;
-    color:#003366;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:900;
-    font-size:22px;
+    border-radius:18px;
+    padding:8px 12px;
+    overflow:hidden;
+    flex-shrink:0;
     box-shadow:0 8px 18px rgba(0,0,0,.18);
 }
 
+.logo-box.image-logo img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+}
+
 .header-pro h1{
-    font-size:40px;
+    font-size:38px;
     letter-spacing:.5px;
 }
 
 .header-pro p{
-    opacity:.9;
+    opacity:.92;
     margin-top:4px;
 }
 
@@ -65,6 +73,7 @@ body{
     border-radius:999px;
     font-weight:900;
     box-shadow:0 8px 18px rgba(0,0,0,.18);
+    white-space:nowrap;
 }
 
 .progress-wrap{
@@ -98,11 +107,11 @@ body{
 
 .card{
     background:white;
-    padding:28px;
+    padding:30px;
     border-radius:24px;
     margin-bottom:24px;
-    box-shadow:0 12px 28px rgba(15,23,42,.08);
-    border:1px solid #e5e7eb;
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
+    border:none;
 }
 
 .hero-card{
@@ -117,10 +126,24 @@ body{
     border:1px solid #d6e9ff;
 }
 
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    margin-bottom:20px;
+}
+
+.subtitle{
+    color:#64748b;
+    margin-top:6px;
+    font-size:15px;
+}
+
 .card h2,
 .card h3{
     color:#003366;
-    margin-bottom:18px;
+    margin-bottom:10px;
     border-left:7px solid #0078d4;
     padding-left:14px;
 }
@@ -262,23 +285,24 @@ button:hover{
 }
 
 .risk-card{
-    background:#f8fbff;
-    border:1px solid #dbeafe;
+    background:white;
+    border:none;
+    border-top:8px solid #0078d4;
     border-radius:22px;
     padding:22px;
-    box-shadow:0 8px 18px rgba(0,0,0,.06);
-    transition:.25s;
-    border-top:7px solid #0078d4;
+    box-shadow:0 15px 30px rgba(0,0,0,.10);
+    transition:.3s;
 }
 
 .risk-card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 18px 30px rgba(0,0,0,.12);
+    transform:translateY(-8px);
+    box-shadow:0 25px 40px rgba(0,0,0,.15);
 }
 
 .icon{
-    font-size:38px;
-    margin-bottom:8px;
+    font-size:50px;
+    text-align:center;
+    margin-bottom:15px;
 }
 
 .risk-card h3{
@@ -287,17 +311,20 @@ button:hover{
     color:#003366;
     font-size:26px;
     margin-bottom:4px;
+    text-align:center;
 }
 
 .risk-card h4{
     color:#0078d4;
     margin-bottom:12px;
+    text-align:center;
 }
 
 .risk-card p{
     color:#475569;
     margin-bottom:12px;
     line-height:1.4;
+    text-align:center;
 }
 
 .nivel{
@@ -340,18 +367,26 @@ button:hover{
 
 .table-card{
     overflow:auto;
+    box-shadow:0 20px 40px rgba(0,0,0,.08);
 }
 
 .resumen{
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:15px;
+    background:#f8fbff;
+    border:2px solid #dbeafe;
     border-radius:16px;
     padding:18px;
     margin-bottom:18px;
 }
 
 .resumen p{
-    margin-bottom:7px;
+    background:white;
+    padding:14px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,.05);
+    margin:0;
 }
 
 table{
@@ -365,7 +400,7 @@ table{
 }
 
 thead{
-    background:#003366;
+    background:linear-gradient(135deg,#003366,#0078d4);
     color:white;
 }
 
@@ -375,6 +410,8 @@ th{
     position:sticky;
     top:0;
     z-index:2;
+    font-size:14px;
+    letter-spacing:.5px;
 }
 
 td{
@@ -382,10 +419,15 @@ td{
     padding:10px;
     vertical-align:top;
     background:white;
+    transition:.2s;
 }
 
 tbody tr:nth-child(even) td{
     background:#f8fafc;
+}
+
+tbody tr:hover td{
+    background:#eaf5ff;
 }
 
 td textarea{
@@ -423,6 +465,10 @@ td textarea{
     margin:5px auto;
 }
 
+.page-logo{
+    display:none !important;
+}
+
 @media(max-width:1100px){
     .risk-guide{
         grid-template-columns:1fr 1fr;
@@ -442,6 +488,12 @@ td textarea{
 
     .brand{
         flex-direction:column;
+        max-width:100%;
+    }
+
+    .logo-box.image-logo{
+        width:155px;
+        height:64px;
     }
 
     .header-pro h1{
