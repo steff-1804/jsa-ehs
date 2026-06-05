@@ -1,9 +1,13 @@
 let infoGeneral = JSON.parse(localStorage.getItem("infoGeneralJSA") || "{}");
 let actividades = JSON.parse(localStorage.getItem("actividadesJSA") || "[]");
+let fotosTemporales = [];
+let peligrosTemporales = [];
 
 window.onload = function () {
     cargarInfoGuardada();
-    renderListaActividades();
+    renderFotosTemporales();
+    renderPeligrosTemporales();
+    renderActividades();
 };
 
 function guardarLocal() {
@@ -14,6 +18,7 @@ function guardarLocal() {
 function mostrarPagina(id) {
     document.querySelectorAll(".page-step").forEach(p => p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function irPagina1() {
@@ -29,7 +34,7 @@ function irPagina2() {
     };
 
     if (!infoGeneral.area || !infoGeneral.miembros || !infoGeneral.fecha || !infoGeneral.descripcion) {
-        alert("Complete toda la información general.");
+        alert("Complete toda la información de la página 1.");
         return;
     }
 
@@ -63,34 +68,85 @@ function leerFotos(files) {
     return Promise.all([...files].map(file => {
         return new Promise(resolve => {
             const reader = new FileReader();
-            reader.onload = e => resolve(e.target.result);
+
+            reader.onload = function (e) {
+                const img = new Image();
+
+                img.onload = function () {
+                    const canvas = document.createElement("canvas");
+                    const maxWidth = 900;
+                    const maxHeight = 700;
+
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height && width > maxWidth) {
+                        height = height * (maxWidth / width);
+                        width = maxWidth;
+                    } else if (height > maxHeight) {
+                        width = width * (maxHeight / height);
+                        height = maxHeight;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    resolve(canvas.toDataURL("image/jpeg", 0.55));
+                };
+
+                img.src = e.target.result;
+            };
+
             reader.readAsDataURL(file);
         });
     }));
 }
 
-async function agregarActividad() {
-    const actividad = document.getElementById("actividad").value.trim();
+document.addEventListener("change", async function (e) {
+    if (e.target.id === "fotos" || e.target.id === "foto_camara") {
+        const nuevasFotos = await leerFotos(e.target.files);
+        fotosTemporales.push(...nuevasFotos);
+        renderFotosTemporales();
+        e.target.value = "";
+    }
+});
+
+function renderFotosTemporales() {
+    const contenedor = document.getElementById("previewFotos");
+    if (!contenedor) return;
+
+    contenedor.innerHTML = "";
+
+    fotosTemporales.forEach((foto, index) => {
+        contenedor.innerHTML += `
+            <div class="foto-item">
+                <img src="${foto}">
+                <button type="button" class="danger small" onclick="eliminarFotoTemporal(${index})">Eliminar foto</button>
+            </div>
+        `;
+    });
+}
+
+function eliminarFotoTemporal(index) {
+    fotosTemporales.splice(index, 1);
+    renderFotosTemporales();
+}
+
+function agregarPeligroTemporal() {
     const peligro = document.getElementById("peligro").value.trim();
     const consecuencia = document.getElementById("consecuencia").value.trim();
 
-    const fotosInput = document.getElementById("fotos").files;
-    const fotoCamara = document.getElementById("foto_camara").files;
-
-    if (!actividad || !peligro || !consecuencia) {
-        alert("Complete actividad, peligro y consecuencia.");
+    if (!peligro || !consecuencia) {
+        alert("Ingrese peligro y consecuencia.");
         return;
     }
 
-    const fotos1 = await leerFotos(fotosInput);
-    const fotos2 = await leerFotos(fotoCamara);
-    const fotos = [...fotos1, ...fotos2];
-
-    actividades.push({
-        actividad,
+    peligrosTemporales.push({
         peligro,
         consecuencia,
-        fotos,
         sev: 1,
         likl: 1,
         cont: 1,
@@ -101,28 +157,79 @@ async function agregarActividad() {
         cont_post: 1
     });
 
-    guardarLocal();
-    renderListaActividades();
+    document.getElementById("peligro").value = "";
+    document.getElementById("consecuencia").value = "";
+
+    renderPeligrosTemporales();
+}
+
+function renderPeligrosTemporales() {
+    const contenedor = document.getElementById("listaPeligrosTemp");
+    if (!contenedor) return;
+
+    contenedor.innerHTML = "";
+
+    peligrosTemporales.forEach((p, index) => {
+        contenedor.innerHTML += `
+            <div class="activity-item">
+                <b>Peligro:</b> ${p.peligro}<br>
+                <b>Consecuencia:</b> ${p.consecuencia}<br>
+                <button type="button" class="danger small" onclick="eliminarPeligroTemporal(${index})">Eliminar peligro</button>
+            </div>
+        `;
+    });
+}
+
+function eliminarPeligroTemporal(index) {
+    peligrosTemporales.splice(index, 1);
+    renderPeligrosTemporales();
+}
+
+function guardarActividad() {
+    const actividad = document.getElementById("actividad").value.trim();
+
+    if (!actividad) {
+        alert("Ingrese la actividad.");
+        return;
+    }
+
+    if (peligrosTemporales.length === 0) {
+        alert("Agregue al menos un peligro.");
+        return;
+    }
+
+    actividades.push({
+        actividad,
+        fotos: fotosTemporales,
+        peligros: peligrosTemporales
+    });
+
+    fotosTemporales = [];
+    peligrosTemporales = [];
 
     document.getElementById("actividad").value = "";
     document.getElementById("peligro").value = "";
     document.getElementById("consecuencia").value = "";
-    document.getElementById("fotos").value = "";
-    document.getElementById("foto_camara").value = "";
+
+    guardarLocal();
+    renderFotosTemporales();
+    renderPeligrosTemporales();
+    renderActividades();
 }
 
-function renderListaActividades() {
+function renderActividades() {
     const contenedor = document.getElementById("listaActividades");
     if (!contenedor) return;
 
     contenedor.innerHTML = "";
 
-    actividades.forEach((a, i) => {
+    actividades.forEach((a, index) => {
         contenedor.innerHTML += `
             <div class="activity-item">
-                <b>${i + 1}. ${a.actividad}</b><br>
-                <small>${a.peligro} - ${a.consecuencia}</small><br>
-                <button class="danger small" onclick="eliminarActividad(${i})">Eliminar</button>
+                <b>${index + 1}. ${a.actividad}</b><br>
+                <small>Fotos: ${a.fotos.length}</small><br>
+                <small>Peligros: ${a.peligros.length}</small><br>
+                <button type="button" class="danger small" onclick="eliminarActividad(${index})">Eliminar actividad</button>
             </div>
         `;
     });
@@ -131,61 +238,33 @@ function renderListaActividades() {
 function eliminarActividad(index) {
     actividades.splice(index, 1);
     guardarLocal();
-    renderListaActividades();
+    renderActividades();
 }
 
-function selectNivel(valor, index, campo) {
-    let html = `<select onchange="actualizarCampo(${index}, '${campo}', this.value)">`;
+function selectNivel(valor, actividadIndex, peligroIndex, campo) {
+    let html = `<select onchange="actualizarCampo(${actividadIndex}, ${peligroIndex}, '${campo}', this.value)">`;
+
     for (let i = 1; i <= 5; i++) {
         html += `<option value="${i}" ${Number(valor) === i ? "selected" : ""}>${i}</option>`;
     }
+
     html += `</select>`;
     return html;
 }
 
-function calcularRPN(sev, likl, cont) {
-    return Number(sev) * Number(likl) * Number(cont);
-}
-
-function actualizarCampo(index, campo, valor) {
-    actividades[index][campo] = valor;
+function actualizarCampo(actividadIndex, peligroIndex, campo, valor) {
+    actividades[actividadIndex].peligros[peligroIndex][campo] = Number(valor);
     guardarLocal();
     renderTablaJSA();
 }
 
-function actualizarTexto(index, campo, valor) {
-    actividades[index][campo] = valor;
+function actualizarTexto(actividadIndex, peligroIndex, campo, valor) {
+    actividades[actividadIndex].peligros[peligroIndex][campo] = valor;
     guardarLocal();
 }
 
-function renderTablaJSA() {
-    const tbody = document.querySelector("#tablaJSA tbody");
-    tbody.innerHTML = "";
-
-    actividades.forEach((a, i) => {
-        const rpn = calcularRPN(a.sev, a.likl, a.cont);
-        const rpnPost = calcularRPN(a.sev_post, a.likl_post, a.cont_post);
-
-        const fotosHTML = a.fotos.map(f => `<img class="foto-mini" src="${f}">`).join("");
-
-        tbody.innerHTML += `
-            <tr>
-                <td>${a.actividad}</td>
-                <td>${fotosHTML}</td>
-                <td><b>${a.peligro}</b><br>${a.consecuencia}</td>
-                <td>${selectNivel(a.sev, i, "sev")}</td>
-                <td>${selectNivel(a.likl, i, "likl")}</td>
-                <td><textarea onchange="actualizarTexto(${i}, 'existing_controls', this.value)">${a.existing_controls || ""}</textarea></td>
-                <td>${selectNivel(a.cont, i, "cont")}</td>
-                <td class="${colorRPN(rpn)}">${rpn}</td>
-                <td><textarea onchange="actualizarTexto(${i}, 'recommended_controls', this.value)">${a.recommended_controls || ""}</textarea></td>
-                <td>${selectNivel(a.sev_post, i, "sev_post")}</td>
-                <td>${selectNivel(a.likl_post, i, "likl_post")}</td>
-                <td>${selectNivel(a.cont_post, i, "cont_post")}</td>
-                <td class="${colorRPN(rpnPost)}">${rpnPost}</td>
-            </tr>
-        `;
-    });
+function calcularRPN(sev, likl, cont) {
+    return Number(sev) * Number(likl) * Number(cont);
 }
 
 function colorRPN(rpn) {
@@ -194,10 +273,61 @@ function colorRPN(rpn) {
     return "alto";
 }
 
+function renderTablaJSA() {
+    const tbody = document.querySelector("#tablaJSA tbody");
+    tbody.innerHTML = "";
+
+    actividades.forEach((actividad, actividadIndex) => {
+        actividad.peligros.forEach((peligro, peligroIndex) => {
+            const rpn = calcularRPN(peligro.sev, peligro.likl, peligro.cont);
+            const rpnPost = calcularRPN(peligro.sev_post, peligro.likl_post, peligro.cont_post);
+            const fotosHTML = peligroIndex === 0
+                ? actividad.fotos.map(f => `<img class="foto-mini" src="${f}">`).join("")
+                : "";
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${actividad.actividad}</td>
+                    <td>${fotosHTML}</td>
+                    <td>${peligro.peligro}</td>
+                    <td>${peligro.consecuencia}</td>
+                    <td>${selectNivel(peligro.sev, actividadIndex, peligroIndex, "sev")}</td>
+                    <td>${selectNivel(peligro.likl, actividadIndex, peligroIndex, "likl")}</td>
+                    <td><textarea onchange="actualizarTexto(${actividadIndex}, ${peligroIndex}, 'existing_controls', this.value)">${peligro.existing_controls || ""}</textarea></td>
+                    <td>${selectNivel(peligro.cont, actividadIndex, peligroIndex, "cont")}</td>
+                    <td class="${colorRPN(rpn)}">${rpn}</td>
+                    <td><textarea onchange="actualizarTexto(${actividadIndex}, ${peligroIndex}, 'recommended_controls', this.value)">${peligro.recommended_controls || ""}</textarea></td>
+                    <td>${selectNivel(peligro.sev_post, actividadIndex, peligroIndex, "sev_post")}</td>
+                    <td>${selectNivel(peligro.likl_post, actividadIndex, peligroIndex, "likl_post")}</td>
+                    <td>${selectNivel(peligro.cont_post, actividadIndex, peligroIndex, "cont_post")}</td>
+                    <td class="${colorRPN(rpnPost)}">${rpnPost}</td>
+                </tr>
+            `;
+        });
+    });
+}
+
+function prepararDatosExportacion() {
+    const filas = [];
+
+    actividades.forEach(actividad => {
+        actividad.peligros.forEach((peligro, index) => {
+            filas.push({
+                actividad: actividad.actividad,
+                fotos: index === 0 ? actividad.fotos : [],
+                ...peligro
+            });
+        });
+    });
+
+    return filas;
+}
+
 async function exportarExcel() {
     const formData = new FormData();
+
     formData.append("info_general", JSON.stringify(infoGeneral));
-    formData.append("data", JSON.stringify(actividades));
+    formData.append("data", JSON.stringify(prepararDatosExportacion()));
 
     const response = await fetch("/exportar_excel", {
         method: "POST",
@@ -230,6 +360,8 @@ function limpiarTodo() {
 
     infoGeneral = {};
     actividades = [];
+    fotosTemporales = [];
+    peligrosTemporales = [];
 
     location.reload();
 }
