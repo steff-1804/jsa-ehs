@@ -17,9 +17,9 @@
     </header>
 
     <!-- PÁGINA 1 -->
-    <section class="page-step active" id="pagina1">
+    <section id="pagina1" class="page-step active">
         <div class="card">
-            <h2>1. Información general</h2>
+            <h2>Página 1: Información general</h2>
 
             <label>Área</label>
             <input type="text" id="area">
@@ -33,14 +33,14 @@
             <label>Descripción de la actividad</label>
             <textarea id="descripcion"></textarea>
 
-            <button onclick="irPagina2()">Siguiente</button>
+            <button type="button" onclick="irPagina2()">Siguiente</button>
         </div>
     </section>
 
     <!-- PÁGINA 2 -->
-    <section class="page-step" id="pagina2">
+    <section id="pagina2" class="page-step">
         <div class="card">
-            <h2>2. Actividades, fotos, peligros y consecuencias</h2>
+            <h2>Página 2: Actividades, fotos y peligros</h2>
 
             <label>Actividad</label>
             <input type="text" id="actividad">
@@ -49,41 +49,52 @@
             <input type="file" id="fotos" accept="image/*" multiple>
             <input type="file" id="foto_camara" accept="image/*" capture="environment">
 
+            <div id="previewFotos" class="preview-grid"></div>
+
+            <h3>Agregar peligro a esta actividad</h3>
+
             <label>Nombre del peligro</label>
             <textarea id="peligro"></textarea>
 
             <label>Potencial consecuencia</label>
             <textarea id="consecuencia"></textarea>
 
-            <button onclick="agregarActividad()">+ Agregar actividad</button>
-            <button onclick="irPagina1()">Atrás</button>
-            <button onclick="irPagina3()">Siguiente</button>
+            <button type="button" onclick="agregarPeligroTemporal()">+ Agregar peligro</button>
+
+            <div class="subcard">
+                <h3>Peligros agregados a esta actividad</h3>
+                <div id="listaPeligrosTemp"></div>
+            </div>
+
+            <button type="button" onclick="guardarActividad()">Guardar actividad</button>
+            <button type="button" onclick="irPagina1()">Atrás</button>
+            <button type="button" onclick="irPagina3()">Siguiente</button>
         </div>
 
         <div class="card">
-            <h3>Actividades agregadas</h3>
+            <h3>Actividades guardadas</h3>
             <div id="listaActividades"></div>
         </div>
     </section>
 
     <!-- PÁGINA 3 -->
-    <section class="page-step" id="pagina3">
+    <section id="pagina3" class="page-step">
         <div class="card">
-            <h2>3. Evaluación de riesgos</h2>
+            <h2>Página 3: Evaluación de riesgos</h2>
 
             <div class="info-grid">
-                <div><b>SEV/SIV:</b> Severidad del daño.</div>
-                <div><b>LIKL:</b> Probabilidad de ocurrencia.</div>
-                <div><b>CONT:</b> Nivel de control existente.</div>
-                <div><b>RPN:</b> SEV × LIKL × CONT.</div>
+                <div><b>SEV / SIV:</b> Severidad del daño o consecuencia.</div>
+                <div><b>LIKL:</b> Probabilidad de que ocurra el evento.</div>
+                <div><b>CONT:</b> Nivel de control existente o recomendado.</div>
+                <div><b>RPN:</b> Resultado de SEV × LIKL × CONT.</div>
             </div>
 
             <div class="niveles">
-                <p><b>1:</b> Bajo / leve / muy controlado</p>
-                <p><b>2:</b> Menor</p>
-                <p><b>3:</b> Medio / moderado</p>
-                <p><b>4:</b> Alto / grave</p>
-                <p><b>5:</b> Crítico / fatal / sin control</p>
+                <p><b>1:</b> Bajo / leve / control muy efectivo</p>
+                <p><b>2:</b> Menor / poco probable / control efectivo</p>
+                <p><b>3:</b> Medio / posible / control parcial</p>
+                <p><b>4:</b> Alto / probable / control deficiente</p>
+                <p><b>5:</b> Crítico / muy probable / sin control</p>
             </div>
         </div>
 
@@ -102,7 +113,8 @@
                     <tr>
                         <th>Actividad</th>
                         <th>Fotos</th>
-                        <th>Peligro y consecuencia</th>
+                        <th>Peligro</th>
+                        <th>Consecuencia</th>
                         <th>SEV</th>
                         <th>LIKL</th>
                         <th>Controles existentes</th>
@@ -118,9 +130,9 @@
                 <tbody></tbody>
             </table>
 
-            <button onclick="irPagina2()">Atrás</button>
-            <button onclick="exportarExcel()">Descargar Excel</button>
-            <button class="danger" onclick="limpiarTodo()">Borrar todo</button>
+            <button type="button" onclick="irPagina2()">Atrás</button>
+            <button type="button" onclick="exportarExcel()">Descargar Excel</button>
+            <button type="button" class="danger" onclick="limpiarTodo()">Borrar todo</button>
         </div>
     </section>
 
