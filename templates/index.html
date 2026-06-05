@@ -13,7 +13,10 @@
 
     <header class="header-pro">
         <div class="brand">
-            <div class="logo-box">EHS</div>
+            <div class="logo-box image-logo">
+                <img src="{{ url_for('static', filename='img/sherwin_logo.png') }}" alt="Sherwin Williams">
+            </div>
+
             <div>
                 <h1>Generador JSA</h1>
                 <p>Análisis Seguro de Trabajo | Evaluación de Peligros Laborales</p>
@@ -30,7 +33,19 @@
     <!-- PÁGINA 1 -->
     <section id="pagina1" class="page-step active">
         <div class="card hero-card">
-            <h2>Información general</h2>
+
+            <div class="page-header">
+                <div>
+                    <h2>Información general</h2>
+                    <p class="subtitle">
+                        Complete la información inicial para la elaboración del Análisis Seguro de Trabajo.
+                    </p>
+                </div>
+
+                <img class="page-logo"
+                     src="{{ url_for('static', filename='img/sherwin_logo.png') }}"
+                     alt="Sherwin Williams">
+            </div>
 
             <div class="form-grid">
                 <div>
@@ -59,7 +74,19 @@
     <!-- PÁGINA 2 -->
     <section id="pagina2" class="page-step">
         <div class="card hero-card">
-            <h2>Actividades, fotos y peligros</h2>
+
+            <div class="page-header">
+                <div>
+                    <h2>Actividades, fotos y peligros</h2>
+                    <p class="subtitle">
+                        Registre las actividades observadas junto con las evidencias fotográficas y peligros identificados.
+                    </p>
+                </div>
+
+                <img class="page-logo"
+                     src="{{ url_for('static', filename='img/sherwin_logo.png') }}"
+                     alt="Sherwin Williams">
+            </div>
 
             <label>Actividad</label>
             <input type="text" id="actividad" placeholder="Ej: Limpieza de tanque, cambio de filtro, traslado de material">
@@ -113,7 +140,18 @@
     <section id="pagina3" class="page-step">
 
         <div class="card">
-            <h2>Evaluación de riesgos</h2>
+            <div class="page-header">
+                <div>
+                    <h2>Evaluación de riesgos</h2>
+                    <p class="subtitle">
+                        Realice la valoración de los riesgos mediante la metodología SEV, LIKL, CONT y RPN.
+                    </p>
+                </div>
+
+                <img class="page-logo"
+                     src="{{ url_for('static', filename='img/sherwin_logo.png') }}"
+                     alt="Sherwin Williams">
+            </div>
 
             <div class="risk-guide">
 
@@ -168,7 +206,14 @@
         </div>
 
         <div class="card table-card">
-            <h3>Matriz JSA</h3>
+            <div class="page-header">
+                <div>
+                    <h3>Matriz JSA</h3>
+                    <p class="subtitle">
+                        Resumen consolidado de actividades, peligros, controles y evaluación de riesgos.
+                    </p>
+                </div>
+            </div>
 
             <div class="resumen">
                 <p><b>Área:</b> <span id="res_area"></span></p>
