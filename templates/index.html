@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador JSA</title>
+    <title>Generador JSA EHS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -11,51 +11,70 @@
 
 <div class="app">
 
-    <header class="header">
-        <div>
-            <h1>Generador JSA</h1>
-            <p>Análisis Seguro de Trabajo</p>
+    <header class="header-pro">
+        <div class="brand">
+            <div class="logo-box">EHS</div>
+            <div>
+                <h1>Generador JSA</h1>
+                <p>Análisis Seguro de Trabajo | Evaluación de Peligros Laborales</p>
+            </div>
         </div>
-        <span class="tag">EHS</span>
+
+        <div class="status-pill" id="estadoPagina">Página 1 de 3</div>
     </header>
 
-    <div class="steps">
-        <div class="step active-step" id="step1">1. Información</div>
-        <div class="step" id="step2">2. Actividades</div>
-        <div class="step" id="step3">3. Evaluación</div>
+    <div class="progress-wrap">
+        <div class="progress-bar" id="barraProgreso"></div>
     </div>
 
+    <!-- PÁGINA 1 -->
     <section id="pagina1" class="page-step active">
         <div class="card hero-card">
-            <h2>Página 1: Información general</h2>
+            <h2>Información general</h2>
 
-            <label>Área</label>
-            <input type="text" id="area" placeholder="Ej: Producción, Bodega, Mantenimiento">
+            <div class="form-grid">
+                <div>
+                    <label>Área</label>
+                    <input type="text" id="area" placeholder="Ej: Producción, Bodega, Mantenimiento">
+                </div>
+
+                <div>
+                    <label>Fecha</label>
+                    <input type="date" id="fecha">
+                </div>
+            </div>
 
             <label>Nombre de los miembros del área</label>
             <textarea id="miembros" placeholder="Ingrese los nombres de los participantes"></textarea>
 
-            <label>Fecha</label>
-            <input type="date" id="fecha">
-
             <label>Descripción de la actividad</label>
             <textarea id="descripcion" placeholder="Describa brevemente el trabajo que se evaluará"></textarea>
 
-            <button type="button" onclick="irPagina2()">Siguiente</button>
+            <div class="actions">
+                <button type="button" onclick="irPagina2()">Siguiente</button>
+            </div>
         </div>
     </section>
 
+    <!-- PÁGINA 2 -->
     <section id="pagina2" class="page-step">
         <div class="card hero-card">
-            <h2>Página 2: Actividades, fotos y peligros</h2>
+            <h2>Actividades, fotos y peligros</h2>
 
             <label>Actividad</label>
             <input type="text" id="actividad" placeholder="Ej: Limpieza de tanque, cambio de filtro, traslado de material">
 
             <label>Fotos de la actividad</label>
             <div class="foto-inputs">
-                <input type="file" id="fotos" accept="image/*" multiple>
-                <input type="file" id="foto_camara" accept="image/*" capture="environment">
+                <div class="upload-card">
+                    <span>📁 Subir desde computadora</span>
+                    <input type="file" id="fotos" accept="image/*" multiple>
+                </div>
+
+                <div class="upload-card">
+                    <span>📸 Tomar desde celular</span>
+                    <input type="file" id="foto_camara" accept="image/*" capture="environment">
+                </div>
             </div>
 
             <div id="previewFotos" class="preview-grid"></div>
@@ -73,13 +92,15 @@
             </div>
 
             <div class="subcard">
-                <h3>Peligros agregados a esta actividad</h3>
+                <h3>Peligros agregados</h3>
                 <div id="listaPeligrosTemp"></div>
             </div>
 
-            <button type="button" onclick="guardarActividad()">Guardar actividad</button>
-            <button type="button" class="secondary" onclick="irPagina1()">Atrás</button>
-            <button type="button" onclick="irPagina3()">Siguiente</button>
+            <div class="actions">
+                <button type="button" class="secondary" onclick="irPagina1()">Atrás</button>
+                <button type="button" onclick="guardarActividad()">Guardar actividad</button>
+                <button type="button" onclick="irPagina3()">Siguiente</button>
+            </div>
         </div>
 
         <div class="card">
@@ -88,70 +109,59 @@
         </div>
     </section>
 
+    <!-- PÁGINA 3 -->
     <section id="pagina3" class="page-step">
 
         <div class="card">
-            <h2>Página 3: Evaluación de riesgos</h2>
+            <h2>Evaluación de riesgos</h2>
 
             <div class="risk-guide">
 
                 <div class="risk-card">
-                    <div class="risk-title">
-                        <span>SEV / SIV</span>
-                        <small>Severidad del daño</small>
-                    </div>
-                    <p>Mide qué tan grave puede ser la consecuencia si ocurre el evento.</p>
-                    <ul>
-                        <li><b>1 Bajo:</b> lesión leve o molestia mínima.</li>
-                        <li><b>2 Menor:</b> lesión menor sin incapacidad importante.</li>
-                        <li><b>3 Medio:</b> lesión moderada o atención médica.</li>
-                        <li><b>4 Alto:</b> lesión grave, incapacidad o daño significativo.</li>
-                        <li><b>5 Crítico:</b> fatalidad, incapacidad permanente o evento mayor.</li>
-                    </ul>
+                    <div class="icon">⚠️</div>
+                    <h3>SEV / SIV</h3>
+                    <h4>Severidad</h4>
+                    <p>Determina la gravedad del daño si ocurre el evento.</p>
+                    <div class="nivel bajo">1 Bajo: lesión leve</div>
+                    <div class="nivel bajo">2 Menor: lesión menor</div>
+                    <div class="nivel medio">3 Medio: lesión moderada</div>
+                    <div class="nivel alto">4 Alto: lesión grave</div>
+                    <div class="nivel critico">5 Crítico: fatalidad o incapacidad</div>
                 </div>
 
                 <div class="risk-card">
-                    <div class="risk-title">
-                        <span>LIKL</span>
-                        <small>Probabilidad</small>
-                    </div>
-                    <p>Mide qué tan probable es que ocurra el peligro durante la actividad.</p>
-                    <ul>
-                        <li><b>1 Bajo:</b> raro, casi nunca ocurre.</li>
-                        <li><b>2 Menor:</b> poco probable.</li>
-                        <li><b>3 Medio:</b> posible bajo ciertas condiciones.</li>
-                        <li><b>4 Alto:</b> probable, puede ocurrir varias veces.</li>
-                        <li><b>5 Crítico:</b> muy probable o frecuente.</li>
-                    </ul>
+                    <div class="icon">🎯</div>
+                    <h3>LIKL</h3>
+                    <h4>Probabilidad</h4>
+                    <p>Mide qué tan probable es que ocurra el peligro.</p>
+                    <div class="nivel bajo">1 Bajo: raro</div>
+                    <div class="nivel bajo">2 Menor: poco probable</div>
+                    <div class="nivel medio">3 Medio: posible</div>
+                    <div class="nivel alto">4 Alto: probable</div>
+                    <div class="nivel critico">5 Crítico: muy probable</div>
                 </div>
 
                 <div class="risk-card">
-                    <div class="risk-title">
-                        <span>CONT</span>
-                        <small>Nivel de control</small>
-                    </div>
-                    <p>Mide qué tan efectivos son los controles existentes o recomendados.</p>
-                    <ul>
-                        <li><b>1 Bajo:</b> control muy efectivo.</li>
-                        <li><b>2 Menor:</b> control efectivo.</li>
-                        <li><b>3 Medio:</b> control parcial.</li>
-                        <li><b>4 Alto:</b> control deficiente.</li>
-                        <li><b>5 Crítico:</b> sin control o control inexistente.</li>
-                    </ul>
+                    <div class="icon">🛡️</div>
+                    <h3>CONT</h3>
+                    <h4>Control</h4>
+                    <p>Evalúa la eficacia del control existente o recomendado.</p>
+                    <div class="nivel bajo">1 Bajo: muy efectivo</div>
+                    <div class="nivel bajo">2 Menor: efectivo</div>
+                    <div class="nivel medio">3 Medio: parcial</div>
+                    <div class="nivel alto">4 Alto: deficiente</div>
+                    <div class="nivel critico">5 Crítico: sin control</div>
                 </div>
 
                 <div class="risk-card">
-                    <div class="risk-title">
-                        <span>RPN</span>
-                        <small>Resultado del riesgo</small>
-                    </div>
-                    <p>Se calcula automáticamente multiplicando:</p>
+                    <div class="icon">📊</div>
+                    <h3>RPN</h3>
+                    <h4>Resultado</h4>
+                    <p>Calcula el nivel de riesgo de forma automática.</p>
                     <div class="formula">RPN = SEV × LIKL × CONT</div>
-                    <ul>
-                        <li><b>1 - 10:</b> riesgo bajo.</li>
-                        <li><b>11 - 30:</b> riesgo medio.</li>
-                        <li><b>31 - 125:</b> riesgo alto.</li>
-                    </ul>
+                    <div class="nivel bajo">1 - 10 Riesgo Bajo</div>
+                    <div class="nivel medio">11 - 30 Riesgo Medio</div>
+                    <div class="nivel alto">31 - 125 Riesgo Alto</div>
                 </div>
 
             </div>
@@ -189,9 +199,11 @@
                 <tbody></tbody>
             </table>
 
-            <button type="button" class="secondary" onclick="irPagina2()">Atrás</button>
-            <button type="button" onclick="exportarExcel()">Descargar Excel</button>
-            <button type="button" class="danger" onclick="limpiarTodo()">Borrar todo</button>
+            <div class="actions">
+                <button type="button" class="secondary" onclick="irPagina2()">Atrás</button>
+                <button type="button" onclick="exportarExcel()">Descargar Excel</button>
+                <button type="button" class="danger" onclick="limpiarTodo()">Borrar todo</button>
+            </div>
         </div>
     </section>
 
