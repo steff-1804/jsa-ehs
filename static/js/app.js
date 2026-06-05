@@ -15,14 +15,20 @@ function guardarLocal() {
     localStorage.setItem("actividadesJSA", JSON.stringify(actividades));
 }
 
-function mostrarPagina(id) {
+function activarStep(numero) {
+    document.querySelectorAll(".step").forEach(s => s.classList.remove("active-step"));
+    document.getElementById("step" + numero).classList.add("active-step");
+}
+
+function mostrarPagina(id, step) {
     document.querySelectorAll(".page-step").forEach(p => p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
+    activarStep(step);
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function irPagina1() {
-    mostrarPagina("pagina1");
+    mostrarPagina("pagina1", 1);
 }
 
 function irPagina2() {
@@ -39,7 +45,7 @@ function irPagina2() {
     }
 
     guardarLocal();
-    mostrarPagina("pagina2");
+    mostrarPagina("pagina2", 2);
 }
 
 function irPagina3() {
@@ -54,7 +60,7 @@ function irPagina3() {
     document.getElementById("res_descripcion").innerText = infoGeneral.descripcion;
 
     renderTablaJSA();
-    mostrarPagina("pagina3");
+    mostrarPagina("pagina3", 3);
 }
 
 function cargarInfoGuardada() {
@@ -124,7 +130,7 @@ function renderFotosTemporales() {
         contenedor.innerHTML += `
             <div class="foto-item">
                 <img src="${foto}">
-                <button type="button" class="danger small" onclick="eliminarFotoTemporal(${index})">Eliminar foto</button>
+                <button type="button" class="danger small" onclick="eliminarFotoTemporal(${index})">Eliminar</button>
             </div>
         `;
     });
@@ -225,7 +231,7 @@ function renderActividades() {
 
     actividades.forEach((a, index) => {
         contenedor.innerHTML += `
-            <div class="activity-item">
+            <div class="activity-item activity-saved">
                 <b>${index + 1}. ${a.actividad}</b><br>
                 <small>Fotos: ${a.fotos.length}</small><br>
                 <small>Peligros: ${a.peligros.length}</small><br>
@@ -278,17 +284,37 @@ function renderTablaJSA() {
     tbody.innerHTML = "";
 
     actividades.forEach((actividad, actividadIndex) => {
+        const totalPeligros = actividad.peligros.length;
+
         actividad.peligros.forEach((peligro, peligroIndex) => {
             const rpn = calcularRPN(peligro.sev, peligro.likl, peligro.cont);
             const rpnPost = calcularRPN(peligro.sev_post, peligro.likl_post, peligro.cont_post);
-            const fotosHTML = peligroIndex === 0
-                ? actividad.fotos.map(f => `<img class="foto-mini" src="${f}">`).join("")
-                : "";
+
+            const fotosHTML = actividad.fotos
+                .map(f => `<img class="foto-mini" src="${f}">`)
+                .join("");
+
+            let columnaActividad = "";
+            let columnaFotos = "";
+
+            if (peligroIndex === 0) {
+                columnaActividad = `
+                    <td rowspan="${totalPeligros}" class="celda-combinada actividad-combinada">
+                        ${actividad.actividad}
+                    </td>
+                `;
+
+                columnaFotos = `
+                    <td rowspan="${totalPeligros}" class="celda-combinada fotos-combinadas">
+                        ${fotosHTML}
+                    </td>
+                `;
+            }
 
             tbody.innerHTML += `
                 <tr>
-                    <td>${actividad.actividad}</td>
-                    <td>${fotosHTML}</td>
+                    ${columnaActividad}
+                    ${columnaFotos}
                     <td>${peligro.peligro}</td>
                     <td>${peligro.consecuencia}</td>
                     <td>${selectNivel(peligro.sev, actividadIndex, peligroIndex, "sev")}</td>
@@ -310,11 +336,14 @@ function renderTablaJSA() {
 function prepararDatosExportacion() {
     const filas = [];
 
-    actividades.forEach(actividad => {
-        actividad.peligros.forEach((peligro, index) => {
+    actividades.forEach((actividad, actividadIndex) => {
+        actividad.peligros.forEach((peligro, peligroIndex) => {
             filas.push({
+                actividad_index: actividadIndex,
+                peligro_index: peligroIndex,
+                total_peligros: actividad.peligros.length,
                 actividad: actividad.actividad,
-                fotos: index === 0 ? actividad.fotos : [],
+                fotos: peligroIndex === 0 ? actividad.fotos : [],
                 ...peligro
             });
         });
