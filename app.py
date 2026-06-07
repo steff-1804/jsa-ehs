@@ -16,6 +16,52 @@ def index():
     return render_template("index.html")
 
 
+def pintar_rpn(cell):
+    if cell.value <= 10:
+        cell.fill = PatternFill("solid", fgColor="86EFAC")
+    elif cell.value <= 30:
+        cell.fill = PatternFill("solid", fgColor="FDE047")
+    else:
+        cell.fill = PatternFill("solid", fgColor="F87171")
+
+    cell.font = Font(bold=True)
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+
+
+def insertar_fotos(ws, fotos, celda):
+    if not fotos:
+        return
+
+    try:
+        foto_base64 = fotos[0]
+
+        if "," in foto_base64:
+            encoded = foto_base64.split(",", 1)[1]
+        else:
+            encoded = foto_base64
+
+        image_data = base64.b64decode(encoded)
+        image_stream = BytesIO(image_data)
+
+        pil_image = Image.open(image_stream)
+
+        # Mejor calidad: no reducir demasiado la foto
+        pil_image.thumbnail((420, 320), Image.LANCZOS)
+
+        final_stream = BytesIO()
+        pil_image.save(final_stream, format="PNG", optimize=True)
+        final_stream.seek(0)
+
+        excel_img = ExcelImage(final_stream)
+        excel_img.width = 220
+        excel_img.height = 160
+
+        ws.add_image(excel_img, celda)
+
+    except Exception:
+        ws[celda] = "Imagen no válida"
+
+
 @app.route("/exportar_excel", methods=["POST"])
 def exportar_excel():
     try:
@@ -31,9 +77,6 @@ def exportar_excel():
 
         header_fill = PatternFill("solid", fgColor="1F4E79")
         subheader_fill = PatternFill("solid", fgColor="D9EAF7")
-        green_fill = PatternFill("solid", fgColor="86EFAC")
-        yellow_fill = PatternFill("solid", fgColor="FDE047")
-        red_fill = PatternFill("solid", fgColor="F87171")
 
         ws.merge_cells("A1:N1")
         ws["A1"] = "MATRIZ JSA - ANÁLISIS SEGURO DE TRABAJO"
@@ -50,10 +93,28 @@ def exportar_excel():
         ws["A5"] = "Descripción"
         ws["B5"] = info_general.get("descripcion", "")
 
+        for row in range(2, 6):
+            ws[f"A{row}"].font = Font(bold=True)
+            ws[f"A{row}"].fill = subheader_fill
+            ws[f"A{row}"].border = border
+            ws[f"B{row}"].border = border
+            ws[f"B{row}"].alignment = Alignment(wrap_text=True, vertical="center")
+
         headers = [
-            "Actividad", "Fotos", "Peligro", "Consecuencia",
-            "SEV", "LIKL", "Controles existentes", "CONT", "RPN",
-            "Controles recomendados", "SEV Post", "LIKL Post", "CONT Post", "RPN Post"
+            "Actividad",
+            "Fotos",
+            "Peligro",
+            "Consecuencia",
+            "SEV",
+            "LIKL",
+            "Controles existentes",
+            "CONT",
+            "RPN",
+            "Controles recomendados",
+            "SEV Post",
+            "LIKL Post",
+            "CONT Post",
+            "RPN Post"
         ]
 
         start_row = 7
@@ -61,14 +122,22 @@ def exportar_excel():
         for col, header in enumerate(headers, start=1):
             cell = ws.cell(row=start_row, column=col)
             cell.value = header
-            cell.font = Font(bold=True)
-            cell.fill = subheader_fill
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = header_fill
             cell.border = border
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
         row = start_row + 1
+        actividad_inicio = {}
 
         for item in data:
+            actividad_index = item.get("actividad_index", "")
+            peligro_index = int(item.get("peligro_index", 0))
+            total_peligros = int(item.get("total_peligros", 1))
+
+            if peligro_index == 0:
+                actividad_inicio[actividad_index] = row
+
             sev = int(item.get("sev", 1))
             likl = int(item.get("likl", 1))
             cont = int(item.get("cont", 1))
@@ -102,52 +171,75 @@ def exportar_excel():
                 cell.border = border
                 cell.alignment = Alignment(vertical="center", wrap_text=True)
 
-            for col in [9, 14]:
-                cell = ws.cell(row=row, column=col)
-                if cell.value <= 10:
-                    cell.fill = green_fill
-                elif cell.value <= 30:
-                    cell.fill = yellow_fill
+            pintar_rpn(ws.cell(row=row, column=9))
+            pintar_rpn(ws.cell(row=row, column=14))
+
+            ws.row_dimensions[row].height = 95
+
+            # Insertar foto solo en la primera fila de cada actividad
+            if peligro_index == 0:
+                fotos = item.get("fotos", [])
+                insertar_fotos(ws, fotos, f"B{row}")
+
+            # Cuando llega el último peligro de esa actividad, combinar columnas
+            if peligro_index == total_peligros - 1:
+                fila_inicio = actividad_inicio.get(actividad_index, row)
+                fila_fin = row
+
+                if fila_fin > fila_inicio:
+                    # Actividad
+                    ws.merge_cells(start_row=fila_inicio, start_column=1, end_row=fila_fin, end_column=1)
+
+                    # Foto
+                    ws.merge_cells(start_row=fila_inicio, start_column=2, end_row=fila_fin, end_column=2)
+
+                    # Controles existentes
+                    ws.merge_cells(start_row=fila_inicio, start_column=7, end_row=fila_fin, end_column=7)
+
+                    # Controles recomendados
+                    ws.merge_cells(start_row=fila_inicio, start_column=10, end_row=fila_fin, end_column=10)
+
+                    for col in [1, 2, 7, 10]:
+                        ws.cell(row=fila_inicio, column=col).alignment = Alignment(
+                            horizontal="center",
+                            vertical="center",
+                            wrap_text=True
+                        )
+                        ws.cell(row=fila_inicio, column=col).border = border
+
                 else:
-                    cell.fill = red_fill
-                cell.font = Font(bold=True)
-                cell.alignment = Alignment(horizontal="center", vertical="center")
-
-            fotos = item.get("fotos", [])
-            if fotos:
-                for idx, foto_base64 in enumerate(fotos[:3]):
-                    try:
-                        encoded = foto_base64.split(",", 1)[1]
-                        image_data = base64.b64decode(encoded)
-                        image_stream = BytesIO(image_data)
-
-                        pil_image = Image.open(image_stream)
-                        pil_image.thumbnail((120, 90))
-
-                        final_stream = BytesIO()
-                        pil_image.save(final_stream, format="PNG")
-                        final_stream.seek(0)
-
-                        excel_img = ExcelImage(final_stream)
-                        excel_img.width = 100
-                        excel_img.height = 75
-
-                        ws.add_image(excel_img, f"B{row + idx}")
-                    except Exception:
-                        ws.cell(row=row, column=2).value = "Imagen no válida"
-
-                ws.row_dimensions[row].height = 70
+                    for col in [1, 2, 7, 10]:
+                        ws.cell(row=fila_inicio, column=col).alignment = Alignment(
+                            horizontal="center",
+                            vertical="center",
+                            wrap_text=True
+                        )
 
             row += 1
 
         widths = {
-            "A": 30, "B": 22, "C": 35, "D": 35,
-            "E": 10, "F": 10, "G": 40, "H": 10, "I": 10,
-            "J": 40, "K": 10, "L": 10, "M": 10, "N": 10
+            "A": 30,
+            "B": 32,
+            "C": 34,
+            "D": 38,
+            "E": 10,
+            "F": 10,
+            "G": 42,
+            "H": 10,
+            "I": 10,
+            "J": 42,
+            "K": 10,
+            "L": 10,
+            "M": 10,
+            "N": 10
         }
 
         for col, width in widths.items():
             ws.column_dimensions[col].width = width
+
+        ws.row_dimensions[1].height = 30
+        ws.row_dimensions[7].height = 38
+        ws.freeze_panes = "A8"
 
         output = BytesIO()
         wb.save(output)
