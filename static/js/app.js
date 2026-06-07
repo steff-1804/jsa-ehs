@@ -99,8 +99,10 @@ function leerFotos(files) {
 
                 img.onload = function () {
                     const canvas = document.createElement("canvas");
-                    const maxWidth = 900;
-                    const maxHeight = 700;
+
+                    // Mayor resolución para que no salga pixelado en Excel
+                    const maxWidth = 1400;
+                    const maxHeight = 1000;
 
                     let width = img.width;
                     let height = img.height;
@@ -117,9 +119,12 @@ function leerFotos(files) {
                     canvas.height = height;
 
                     const ctx = canvas.getContext("2d");
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = "high";
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    resolve(canvas.toDataURL("image/jpeg", 0.55));
+                    // Calidad alta para exportación
+                    resolve(canvas.toDataURL("image/jpeg", 0.90));
                 };
 
                 img.src = e.target.result;
