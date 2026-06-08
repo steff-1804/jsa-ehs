@@ -89,45 +89,18 @@ function cargarInfoGuardada() {
     document.getElementById("descripcion").value = infoGeneral.descripcion || "";
 }
 
+/* 
+   IMPORTANTE:
+   Esta función guarda la foto original sin comprimir ni reducir calidad.
+   Si las fotos son muy pesadas, Render puede tardar más al exportar.
+*/
 function leerFotos(files) {
     return Promise.all([...files].map(file => {
         return new Promise(resolve => {
             const reader = new FileReader();
 
             reader.onload = function (e) {
-                const img = new Image();
-
-                img.onload = function () {
-                    const canvas = document.createElement("canvas");
-
-                    // Mayor resolución para que no salga pixelado en Excel
-                    const maxWidth = 1400;
-                    const maxHeight = 1000;
-
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height && width > maxWidth) {
-                        height = height * (maxWidth / width);
-                        width = maxWidth;
-                    } else if (height > maxHeight) {
-                        width = width * (maxHeight / height);
-                        height = maxHeight;
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-
-                    const ctx = canvas.getContext("2d");
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = "high";
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Calidad alta para exportación
-                    resolve(canvas.toDataURL("image/jpeg", 0.90));
-                };
-
-                img.src = e.target.result;
+                resolve(e.target.result);
             };
 
             reader.readAsDataURL(file);
@@ -384,27 +357,34 @@ async function exportarExcel() {
     formData.append("info_general", JSON.stringify(infoGeneral));
     formData.append("data", JSON.stringify(prepararDatosExportacion()));
 
-    const response = await fetch("/exportar_excel", {
-        method: "POST",
-        body: formData
-    });
+    try {
+        const response = await fetch("/exportar_excel", {
+            method: "POST",
+            body: formData
+        });
 
-    if (!response.ok) {
-        alert("Error al exportar Excel.");
-        return;
+        if (!response.ok) {
+            const errorText = await response.text();
+            alert("Error al exportar Excel: " + errorText);
+            return;
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Matriz_JSA.xlsx";
+
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        alert("Error de conexión al exportar Excel: " + error.message);
     }
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Matriz_JSA.xlsx";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    window.URL.revokeObjectURL(url);
 }
 
 function limpiarTodo() {
