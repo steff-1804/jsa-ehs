@@ -6,9 +6,10 @@ from io import BytesIO
 from PIL import Image
 import json
 import base64
+import math
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 120 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
 
 
 @app.route("/")
@@ -28,7 +29,7 @@ def pintar_rpn(cell):
     cell.alignment = Alignment(horizontal="center", vertical="center")
 
 
-def insertar_fotos(ws, fotos, celda):
+def insertar_foto_original(ws, fotos, celda, fila_inicio, fila_fin):
     if not fotos:
         return
 
@@ -45,18 +46,34 @@ def insertar_fotos(ws, fotos, celda):
 
         pil_image = Image.open(image_stream)
 
-        # Mejor calidad: no reducir demasiado la foto
-        pil_image.thumbnail((420, 320), Image.LANCZOS)
+        # NO se redimensiona la imagen.
+        ancho_px, alto_px = pil_image.size
 
         final_stream = BytesIO()
-        pil_image.save(final_stream, format="PNG", optimize=True)
+        pil_image.save(final_stream, format="PNG")
         final_stream.seek(0)
 
         excel_img = ExcelImage(final_stream)
-        excel_img.width = 220
-        excel_img.height = 160
+
+        # Se coloca en tamaño original.
+        excel_img.width = ancho_px
+        excel_img.height = alto_px
 
         ws.add_image(excel_img, celda)
+
+        # Ajustar ancho de columna B según imagen.
+        # Excel usa unidades aproximadas, 1 unidad ≈ 7 px.
+        ancho_columna = max(32, min(ancho_px / 7, 120))
+        ws.column_dimensions["B"].width = ancho_columna
+
+        # Ajustar alto total de las filas combinadas.
+        # Excel usa puntos, 1 px ≈ 0.75 pt.
+        total_filas = max(1, fila_fin - fila_inicio + 1)
+        alto_total_pt = alto_px * 0.75
+        alto_por_fila = max(95, alto_total_pt / total_filas)
+
+        for fila in range(fila_inicio, fila_fin + 1):
+            ws.row_dimensions[fila].height = alto_por_fila
 
     except Exception:
         ws[celda] = "Imagen no válida"
@@ -86,10 +103,13 @@ def exportar_excel():
 
         ws["A2"] = "Área"
         ws["B2"] = info_general.get("area", "")
+
         ws["A3"] = "Miembros"
         ws["B3"] = info_general.get("miembros", "")
+
         ws["A4"] = "Fecha"
         ws["B4"] = info_general.get("fecha", "")
+
         ws["A5"] = "Descripción"
         ws["B5"] = info_general.get("descripcion", "")
 
@@ -176,50 +196,49 @@ def exportar_excel():
 
             ws.row_dimensions[row].height = 95
 
-            # Insertar foto solo en la primera fila de cada actividad
-            if peligro_index == 0:
-                fotos = item.get("fotos", [])
-                insertar_fotos(ws, fotos, f"B{row}")
-
-            # Cuando llega el último peligro de esa actividad, combinar columnas
             if peligro_index == total_peligros - 1:
                 fila_inicio = actividad_inicio.get(actividad_index, row)
                 fila_fin = row
 
                 if fila_fin > fila_inicio:
-                    # Actividad
                     ws.merge_cells(start_row=fila_inicio, start_column=1, end_row=fila_fin, end_column=1)
-
-                    # Foto
                     ws.merge_cells(start_row=fila_inicio, start_column=2, end_row=fila_fin, end_column=2)
-
-                    # Controles existentes
                     ws.merge_cells(start_row=fila_inicio, start_column=7, end_row=fila_fin, end_column=7)
-
-                    # Controles recomendados
                     ws.merge_cells(start_row=fila_inicio, start_column=10, end_row=fila_fin, end_column=10)
 
-                    for col in [1, 2, 7, 10]:
-                        ws.cell(row=fila_inicio, column=col).alignment = Alignment(
-                            horizontal="center",
-                            vertical="center",
-                            wrap_text=True
-                        )
-                        ws.cell(row=fila_inicio, column=col).border = border
+                for col in [1, 2, 7, 10]:
+                    ws.cell(row=fila_inicio, column=col).alignment = Alignment(
+                        horizontal="center",
+                        vertical="center",
+                        wrap_text=True
+                    )
+                    ws.cell(row=fila_inicio, column=col).border = border
 
-                else:
-                    for col in [1, 2, 7, 10]:
-                        ws.cell(row=fila_inicio, column=col).alignment = Alignment(
-                            horizontal="center",
-                            vertical="center",
-                            wrap_text=True
-                        )
+                fotos = item.get("fotos", [])
+
+                # Si el último peligro no trae fotos, se buscan desde la primera fila de esa actividad
+                if not fotos:
+                    for buscar in data:
+                        if (
+                            buscar.get("actividad_index") == actividad_index
+                            and int(buscar.get("peligro_index", 0)) == 0
+                        ):
+                            fotos = buscar.get("fotos", [])
+                            break
+
+                insertar_foto_original(
+                    ws,
+                    fotos,
+                    f"B{fila_inicio}",
+                    fila_inicio,
+                    fila_fin
+                )
 
             row += 1
 
         widths = {
             "A": 30,
-            "B": 32,
+            "B": 45,
             "C": 34,
             "D": 38,
             "E": 10,
@@ -235,7 +254,8 @@ def exportar_excel():
         }
 
         for col, width in widths.items():
-            ws.column_dimensions[col].width = width
+            if col != "B":
+                ws.column_dimensions[col].width = width
 
         ws.row_dimensions[1].height = 30
         ws.row_dimensions[7].height = 38
